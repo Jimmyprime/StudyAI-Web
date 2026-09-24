@@ -993,7 +993,7 @@ generateButton.addEventListener("click", async () => {
 
         // Enviar materia y tema al servidor público de StudyAI
         const response = await fetch(
-            "https://studyai-r71d.onrender.com/api/generate",
+            "https://studyai-web.onrender.com/api/generate",
             {
                 method: "POST",
 
