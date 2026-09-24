@@ -45,8 +45,9 @@ app.get("/api/test", (req, res) => {
     });
 });
 
-// Generar material de estudio
-app.post("/api/generate", (req, res) => {
+    // Generar material de estudio con IA
+app.post("/api/generate", async (req, res) => {
+
     const { subject, topic } = req.body;
 
     if (!subject || !topic) {
@@ -55,64 +56,107 @@ app.post("/api/generate", (req, res) => {
         });
     }
 
-    const material = `
+    try {
+
+        const response = await fetch(
+            "https://openrouter.ai/api/v1/chat/completions",
+            {
+                method: "POST",
+
+                headers: {
+                    "Authorization": `Bearer ${process.env.OPENROUTER_API_KEY}`,
+                    "Content-Type": "application/json"
+                },
+
+                body: JSON.stringify({
+                    model: "openrouter/free",
+
+                    messages: [
+                        {
+                            role: "system",
+                            content: `
+Eres StudyAI, un asistente educativo para estudiantes.
+
+Tu trabajo es crear material de estudio claro, correcto y fácil de entender.
+
+Responde siempre en español.
+
+Organiza el material exactamente con estas secciones:
+
 📚 MATERIAL DE ESTUDIO — STUDYAI
 
-Materia: ${subject}
-Tema: ${topic}
-
-━━━━━━━━━━━━━━━━━━━━
-
 📖 EXPLICACIÓN
-
-Vamos a estudiar ${topic} de la materia de ${subject}.
-
-Este material fue generado por el servidor de StudyAI como
-prueba de funcionamiento.
-
-━━━━━━━━━━━━━━━━━━━━
+Explica el tema de manera sencilla.
 
 🧠 CONCEPTOS IMPORTANTES
-
-• Comprender qué es ${topic}.
-• Identificar sus conceptos principales.
-• Aprender cómo se aplica.
-• Practicar con ejercicios.
-
-━━━━━━━━━━━━━━━━━━━━
+Incluye los conceptos que el estudiante debe recordar.
 
 ✏️ EJEMPLO
-
-Supongamos que estás estudiando ${topic}.
-
-Primero debes identificar los datos importantes,
-después aplicar el procedimiento correspondiente
-y finalmente comprobar el resultado.
-
-━━━━━━━━━━━━━━━━━━━━
+Incluye al menos un ejemplo explicado paso a paso.
 
 📝 EJERCICIOS
-
-1. Explica con tus propias palabras qué es ${topic}.
-
-2. Escribe un ejemplo relacionado con ${topic}.
-
-3. Explica qué pasos seguirías para resolver un problema
-relacionado con ${topic}.
-
-━━━━━━━━━━━━━━━━━━━━
+Crea 3 ejercicios para practicar.
 
 ✅ RESPUESTAS
+Incluye las respuestas de los ejercicios.
 
-Las respuestas definitivas se incorporarán cuando
-conectemos StudyAI con un modelo de inteligencia artificial.
-`;
+No hagas explicaciones innecesariamente complicadas.
+                            `
+                        },
 
-    res.json({
-        text: material
-    });
+                        {
+                            role: "user",
+                            content: `Materia: ${subject}
+Tema: ${topic}`
+                        }
+                    ]
+                })
+            }
+        );
+
+        if (!response.ok) {
+
+            const errorText = await response.text();
+
+            console.error(
+                "Error de OpenRouter:",
+                response.status,
+                errorText
+            );
+
+            throw new Error(
+                "La inteligencia artificial no pudo responder."
+            );
+        }
+
+        const data = await response.json();
+
+        const material =
+            data.choices?.[0]?.message?.content;
+
+        if (!material) {
+            throw new Error(
+                "La IA no devolvió contenido."
+            );
+        }
+
+        res.json({
+            text: material
+        });
+
+    } catch (error) {
+
+        console.error(
+            "Error generando material:",
+            error
+        );
+
+        res.status(500).json({
+            error: "No se pudo generar el material."
+        });
+    }
+
 });
-
 // Iniciar servidor
 app.listen(PORT, "0.0.0.0", () => {
     console.log(`StudyAI está funcionando en el puerto ${PORT}`);
