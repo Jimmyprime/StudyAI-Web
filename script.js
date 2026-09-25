@@ -462,44 +462,31 @@ function formatAIResponse(text) {
 
         }
 
+// Lista numerada
+if (
+    /^\d+[\.\)]\s+/.test(line)
+) {
 
-        // Lista numerada
-        if (
-            /^\d+\.\s+/.test(line)
-        ) {
+    if (inUnorderedList) {
+        html += "</ul>";
+        inUnorderedList = false;
+    }
 
-            if (inUnorderedList) {
+    if (!inOrderedList) {
+        html += "<ol>";
+        inOrderedList = true;
+    }
 
-                html += "</ul>";
+    const itemText = line.replace(
+        /^\d+[\.\)]\s+/,
+        ""
+    );
 
-                inUnorderedList = false;
+    html +=
+        `<li>${inlineMarkdown(itemText)}</li>`;
 
-            }
-
-
-            if (!inOrderedList) {
-
-                html += "<ol>";
-
-                inOrderedList = true;
-
-            }
-
-
-            html +=
-                `<li>${inlineMarkdown(
-                    line.replace(
-                        /^\d+\.\s+/,
-                        ""
-                    )
-                )}</li>`;
-
-
-            continue;
-
-        }
-
-
+    continue;
+}
         // Texto normal
         closeLists();
 

@@ -216,9 +216,9 @@ Termina con un pequeño repaso de los pasos y conceptos más importantes.
                     model: "openrouter/free",
 
                     messages: [
-                        {
-                            role: "system",
-                            content: `
+    {
+        role: "system",
+        content: `
 Eres StudyAI, un asistente educativo para estudiantes.
 
 Tu trabajo es crear material educativo correcto, claro, ordenado y fácil de entender.
@@ -229,17 +229,31 @@ Adapta tus explicaciones a estudiantes y evita usar lenguaje innecesariamente co
 
 Respeta el tipo de material solicitado.
 
-${typeInstruction}
-                            `
-                        },
+IMPORTANTE SOBRE MATEMÁTICAS:
+No uses LaTeX.
+No uses comandos como \\frac, \\cdot, \\times ni otros comandos de LaTeX.
+No escribas operaciones entre \\( \\) ni entre \\[ \\].
+Escribe las operaciones matemáticas como texto normal y fácil de leer.
 
-                        {
-                            role: "user",
-                            content: `Materia: ${subject}
+Ejemplos correctos:
+3x + 5 = 20
+x = 15 / 3
+x² + 3 = 7
+2(x + 4) = 12
+
+No escribas fórmulas como código ni uses barras invertidas en las operaciones.
+
+${typeInstruction}
+        `
+    },
+
+    {
+        role: "user",
+        content: `Materia: ${subject}
 Tema: ${topic}
 Tipo de material: ${type}`
-                        }
-                    ]
+    }
+]
                 })
             }
         );
