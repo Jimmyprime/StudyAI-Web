@@ -48,13 +48,157 @@ app.get("/api/test", (req, res) => {
     // Generar material de estudio con IA
 app.post("/api/generate", async (req, res) => {
 
-    const { subject, topic } = req.body;
+    const { subject, topic, materialType } = req.body;
 
     if (!subject || !topic) {
         return res.status(400).json({
             error: "Falta la materia o el tema."
         });
     }
+
+    // Si por algún motivo no llega el tipo,
+    // se utilizará "guia" automáticamente.
+    const type = materialType || "guia";
+
+    // Instrucciones diferentes para cada tipo de material
+    const instructionsByType = {
+
+        guia: `
+Crea una guía de estudio completa sobre el tema.
+
+Organízala de esta forma:
+
+📚 GUÍA DE ESTUDIO
+
+📖 EXPLICACIÓN
+Explica el tema de manera sencilla y clara.
+
+🧠 CONCEPTOS IMPORTANTES
+Incluye los conceptos principales que el estudiante debe recordar.
+
+✏️ EJEMPLO
+Incluye al menos un ejemplo explicado paso a paso.
+
+📝 EJERCICIOS
+Crea 3 ejercicios para practicar.
+
+✅ RESPUESTAS
+Incluye las respuestas de los ejercicios.
+        `,
+
+        resumen: `
+Crea un resumen claro y fácil de estudiar sobre el tema.
+
+Organízalo de esta forma:
+
+📖 RESUMEN
+
+🎯 IDEA PRINCIPAL
+Explica brevemente de qué trata el tema.
+
+🧠 PUNTOS IMPORTANTES
+Resume las ideas y conceptos más importantes.
+
+⚡ REPASO RÁPIDO
+Termina con una lista corta de lo que el estudiante debe recordar.
+
+No incluyas ejercicios.
+        `,
+
+        ejercicios: `
+Crea material enfocado principalmente en practicar el tema.
+
+Organízalo de esta forma:
+
+✏️ PRÁCTICA DE EJERCICIOS
+
+📖 RECORDATORIO
+Da una explicación muy breve de lo necesario para resolver los ejercicios.
+
+🟢 NIVEL FÁCIL
+Crea 2 ejercicios sencillos.
+
+🟡 NIVEL INTERMEDIO
+Crea 2 ejercicios de dificultad intermedia.
+
+🔴 NIVEL DIFÍCIL
+Crea 2 ejercicios más desafiantes.
+
+✅ SOLUCIONES
+Incluye las respuestas y explica brevemente cómo llegar a ellas.
+        `,
+
+        prueba: `
+Crea una prueba para que el estudiante pueda evaluar lo que sabe.
+
+Organízala de esta forma:
+
+📝 PRUEBA DE ESTUDIO
+
+📌 INSTRUCCIONES
+Explica brevemente cómo responder.
+
+❓ PREGUNTAS
+Crea aproximadamente 8 preguntas.
+
+Cuando sea apropiado para el tema, combina:
+- selección múltiple
+- verdadero o falso
+- preguntas de desarrollo
+- ejercicios de aplicación
+
+No muestres la respuesta inmediatamente después de cada pregunta.
+
+✅ RESPUESTAS
+Coloca todas las respuestas al final.
+        `,
+
+        flashcards: `
+Crea 10 flashcards útiles para memorizar y comprender el tema.
+
+Organízalas de esta forma:
+
+🃏 FLASHCARDS
+
+Tarjeta 1
+Pregunta: ...
+Respuesta: ...
+
+Tarjeta 2
+Pregunta: ...
+Respuesta: ...
+
+Continúa de la misma manera hasta completar 10 tarjetas.
+
+Las preguntas deben cubrir los conceptos más importantes del tema.
+        `,
+
+        "paso-a-paso": `
+Explica el tema paso a paso para un estudiante que todavía no lo domina.
+
+Organízalo de esta forma:
+
+🔍 EXPLICACIÓN PASO A PASO
+
+🎯 ¿QUÉ VAMOS A APRENDER?
+Explica brevemente el objetivo.
+
+1️⃣ PASO 1
+Explica el primer paso de forma sencilla.
+
+Continúa con los pasos necesarios para comprender el tema.
+
+✏️ EJEMPLO PASO A PASO
+Desarrolla al menos un ejemplo mostrando claramente cada paso.
+
+🧠 PARA RECORDAR
+Termina con un pequeño repaso de los pasos y conceptos más importantes.
+        `
+    };
+
+    // Elegir las instrucciones correspondientes
+    const typeInstruction =
+        instructionsByType[type] || instructionsByType.guia;
 
     try {
 
@@ -77,37 +221,23 @@ app.post("/api/generate", async (req, res) => {
                             content: `
 Eres StudyAI, un asistente educativo para estudiantes.
 
-Tu trabajo es crear material de estudio claro, correcto y fácil de entender.
+Tu trabajo es crear material educativo correcto, claro, ordenado y fácil de entender.
 
 Responde siempre en español.
 
-Organiza el material exactamente con estas secciones:
+Adapta tus explicaciones a estudiantes y evita usar lenguaje innecesariamente complicado.
 
-📚 MATERIAL DE ESTUDIO — STUDYAI
+Respeta el tipo de material solicitado.
 
-📖 EXPLICACIÓN
-Explica el tema de manera sencilla.
-
-🧠 CONCEPTOS IMPORTANTES
-Incluye los conceptos que el estudiante debe recordar.
-
-✏️ EJEMPLO
-Incluye al menos un ejemplo explicado paso a paso.
-
-📝 EJERCICIOS
-Crea 3 ejercicios para practicar.
-
-✅ RESPUESTAS
-Incluye las respuestas de los ejercicios.
-
-No hagas explicaciones innecesariamente complicadas.
+${typeInstruction}
                             `
                         },
 
                         {
                             role: "user",
                             content: `Materia: ${subject}
-Tema: ${topic}`
+Tema: ${topic}
+Tipo de material: ${type}`
                         }
                     ]
                 })
@@ -157,6 +287,7 @@ Tema: ${topic}`
     }
 
 });
+
 // Iniciar servidor
 app.listen(PORT, "0.0.0.0", () => {
     console.log(`StudyAI está funcionando en el puerto ${PORT}`);

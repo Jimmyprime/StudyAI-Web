@@ -944,10 +944,14 @@ renderMaterials();
 // GENERAR MATERIAL
 // ============================================
 
+const materialTypeSelect =
+    document.querySelector("#material-type");
+
 generateButton.addEventListener("click", async () => {
 
     const subject = subjectSelect.value;
     const topic = topicInput.value.trim();
+    const materialType = materialTypeSelect.value;
 
     // Comprobar que el usuario escribió los datos
     if (subject === "" || topic === "") {
@@ -991,9 +995,9 @@ generateButton.addEventListener("click", async () => {
 
     try {
 
-        // Enviar materia y tema al servidor público de StudyAI
+        // Enviar los datos al servidor público de StudyAI
         const response = await fetch(
-            "https://studyai-web.onrender.com/api/generate",    
+            "https://studyai-web.onrender.com/api/generate",
             {
                 method: "POST",
 
@@ -1003,7 +1007,8 @@ generateButton.addEventListener("click", async () => {
 
                 body: JSON.stringify({
                     subject: subject,
-                    topic: topic
+                    topic: topic,
+                    materialType: materialType
                 })
             }
         );
